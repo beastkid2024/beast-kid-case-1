@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0e16">
+<meta name="description" content="Beast Kid: Case Files — Case #1: The Somerton Man. A free point-and-click detective game. Search the evidence, question the witnesses, close the case.">
+<title>Beast Kid: Case Files — The Somerton Man</title>
+<style>
+/* Beast Kid: Case Files — noir detective theme. Mobile-first, responsive. */
+:root {
+  --ink: #e8e2d2;
+  --ink-dim: #a89f88;
+  --bg: #0b0e16;
+  --panel: #141a28;
+  --panel2: #1c2438;
+  --gold: #d8a94e;
+  --gold-hi: #f2cd7d;
+  --red: #b0523c;
+  --teal: #5f8f8a;
+  --line: #2c3650;
+  --radius: 12px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+#app { width: 100%; max-width: 960px; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  background: rgba(10, 13, 22, 0.96);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 40;
+  font-size: 15px;
+}
+#hud .brand { font-weight: bold; color: var(--gold); letter-spacing: 1px; margin-right: auto; white-space: nowrap; }
+.hud-stat { color: var(--ink-dim); white-space: nowrap; }
+.hud-stat b { color: var(--ink); }
+.hud-btns { display: flex; gap: 6px; margin-left: 6px; }
+.icon-btn {
+  background: var(--panel2); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px;
+  min-width: 42px; min-height: 42px; font-size: 18px; cursor: pointer;
+  touch-action: manipulation;
+}
+.icon-btn:active { transform: scale(0.94); }
+
+/* ---------- screens ---------- */
+#stage { flex: 1; display: flex; flex-direction: column; padding: 14px; }
+.screen { animation: fadein 0.35s ease; }
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+
+/* title */
+#screen-title { text-align: center; padding: 34px 12px; }
+.game-kicker { color: var(--gold); letter-spacing: 4px; font-size: 13px; text-transform: uppercase; }
+.game-title { font-size: clamp(30px, 7vw, 52px); margin: 10px 0 4px; color: var(--ink); }
+.game-title em { color: var(--gold-hi); font-style: normal; }
+.game-sub { color: var(--ink-dim); font-style: italic; margin-bottom: 26px; }
+.title-art { font-size: 54px; margin: 6px 0 18px; filter: drop-shadow(0 4px 18px rgba(216,169,78,0.35)); }
+
+/* buttons */
+.btn {
+  display: block; width: 100%;
+  background: var(--panel2); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 13px 16px; margin: 8px 0; font-size: 16px; font-family: inherit;
+  cursor: pointer; text-align: center; touch-action: manipulation;
+}
+.btn small { display: block; color: var(--ink-dim); font-size: 12px; margin-top: 3px; }
+.btn:active { transform: scale(0.98); }
+.btn.primary { background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #241a08; font-weight: bold; border: none; }
+.btn.primary:disabled { background: var(--panel2); color: var(--ink-dim); font-weight: normal; }
+.btn.topic { text-align: left; }
+.btn.topic.locked { opacity: 0.55; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; }
+
+/* intro */
+#screen-intro { max-width: 620px; margin: 30px auto; text-align: center; }
+#intro-kicker { color: var(--gold); letter-spacing: 3px; font-size: 12px; text-transform: uppercase; }
+#intro-title { font-size: clamp(24px, 5vw, 36px); margin: 8px 0 14px; }
+#intro-text { font-size: 18px; line-height: 1.65; color: var(--ink); }
+#intro-count { color: var(--ink-dim); margin: 18px 0 6px; font-size: 13px; }
+
+/* map */
+.map-head { text-align: center; margin-bottom: 8px; }
+.map-head h2 { margin: 6px 0 2px; }
+.map-head p { color: var(--ink-dim); margin: 0 0 10px; }
+#map-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.map-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; text-align: left; color: var(--ink); font-family: inherit; cursor: pointer;
+  touch-action: manipulation;
+}
+.map-card:active { transform: scale(0.98); }
+.map-card.locked { opacity: 0.6; cursor: not-allowed; }
+.map-card-name { font-size: 18px; font-weight: bold; }
+.map-card-sub { color: var(--ink-dim); font-size: 13px; margin: 4px 0 8px; font-style: italic; }
+.map-card-progress { color: var(--teal); font-size: 14px; }
+.map-card-lock { color: var(--ink-dim); font-size: 14px; }
+#btn-deduction { margin-top: 14px; font-size: 18px; }
+
+/* scene */
+.scene-head h2 { margin: 4px 0 0; }
+.scene-head .sub { color: var(--gold); font-style: italic; font-size: 14px; }
+.scene-head .blurb { color: var(--ink-dim); font-style: italic; margin: 6px 0 10px; line-height: 1.5; }
+.scene-frame { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); aspect-ratio: 8 / 5; background: #000; }
+.scene-frame svg { width: 100%; height: 100%; display: block; }
+#hotspot-layer { position: absolute; inset: 0; }
+.hotspot {
+  position: absolute; width: 52px; height: 52px; margin: -26px 0 0 -26px;
+  border-radius: 50%; border: 2px solid var(--gold-hi);
+  background: rgba(216, 169, 78, 0.18); color: var(--gold-hi);
+  font-size: 22px; font-weight: bold; cursor: pointer;
+  animation: pulse 2.2s infinite; touch-action: manipulation;
+}
+.hotspot span { pointer-events: none; }
+.hotspot.found { border-color: var(--teal); color: var(--teal); background: rgba(95,143,138,0.15); animation: none; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 205, 125, 0.55); }
+  50% { box-shadow: 0 0 0 12px rgba(242, 205, 125, 0); }
+}
+.hotspot.pulse { animation: pulse 0.9s 3; border-color: #fff; }
+#talk-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.talk-chip {
+  background: var(--panel2); border: 1px solid var(--gold); color: var(--gold-hi);
+  border-radius: 999px; padding: 10px 16px; font-size: 15px; font-family: inherit; cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* modal */
+#modal-root { position: fixed; inset: 0; z-index: 60; display: none; }
+#modal-root.open { display: block; }
+.modal-back { position: absolute; inset: 0; background: rgba(4, 6, 12, 0.78); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal {
+  background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius);
+  max-width: 560px; width: 100%; max-height: 86vh; overflow-y: auto; padding: 20px;
+  animation: fadein 0.25s ease;
+}
+.modal h3 { margin-top: 0; color: var(--gold-hi); }
+.modal p { line-height: 1.6; }
+.clue-head { display: flex; align-items: center; gap: 12px; }
+.clue-icon { font-size: 40px; }
+.clue-points { color: var(--teal); font-size: 14px; margin: 8px 0; }
+.npc-head h3 { margin: 0; }
+.npc-role { color: var(--ink-dim); font-size: 13px; font-style: italic; }
+.npc-intro { color: var(--ink-dim); font-style: italic; }
+.topics { margin: 12px 0; }
+.modal .q { font-style: italic; color: var(--gold-hi); }
+.modal .a { border-left: 3px solid var(--gold); padding-left: 12px; }
+.fx { background: var(--panel2); border-radius: 8px; padding: 8px 12px; margin: 8px 0; font-size: 14px; }
+.fx.big { border: 1px solid var(--gold); color: var(--gold-hi); font-weight: bold; }
+
+/* journal */
+#journal {
+  position: fixed; top: 0; right: -100%; width: min(420px, 94vw); height: 100vh; z-index: 55;
+  background: #10141f; border-left: 1px solid var(--gold);
+  transition: right 0.3s ease; display: flex; flex-direction: column;
+}
+#journal.open { right: 0; }
+.journal-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.journal-head h3 { margin: 0; color: var(--gold-hi); }
+#journal-body { overflow-y: auto; padding: 12px 16px; flex: 1; }
+.j-sec { margin: 10px 0 6px; color: var(--gold); }
+.j-clue { display: flex; gap: 10px; margin: 10px 0; background: var(--panel); border-radius: 8px; padding: 10px; }
+.j-icon { font-size: 26px; }
+.j-clue p { margin: 4px 0 0; font-size: 14px; color: var(--ink-dim); line-height: 1.5; }
+.j-note { background: var(--panel2); border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: 14px; }
+.j-empty { color: var(--ink-dim); font-style: italic; }
+
+/* deduction */
+.ded-head { text-align: center; }
+.ded-head h2 { margin: 6px 0 2px; }
+#ded-progress { color: var(--ink-dim); margin-bottom: 12px; }
+#theory-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.theory-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.theory-card h4 { margin: 0 0 6px; color: var(--gold-hi); font-size: 18px; }
+.theory-card p { color: var(--ink-dim); font-style: italic; font-size: 14px; line-height: 1.5; }
+.ev-list { list-style: none; padding: 0; margin: 10px 0; }
+.ev-list li { padding: 4px 0; font-size: 14px; }
+.ev.yes { color: var(--teal); }
+.ev.no { color: var(--ink-dim); opacity: 0.7; }
+
+/* results */
+#screen-results { max-width: 640px; margin: 20px auto; text-align: center; }
+.res-rank { font-size: clamp(28px, 6vw, 44px); color: var(--gold-hi); margin: 4px 0; }
+.res-box { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 12px 0; text-align: left; }
+.res-box h4 { margin: 0 0 8px; color: var(--gold); }
+.res-box ul { margin: 0; padding-left: 20px; line-height: 1.9; }
+.res-box li.total { list-style: none; margin-left: -20px; border-top: 1px solid var(--line); padding-top: 8px; font-size: 18px; }
+.real-note { color: var(--ink-dim); font-style: italic; line-height: 1.6; margin: 14px 0; }
+.next-case { border: 1px dashed var(--gold); border-radius: var(--radius); padding: 12px; margin: 12px 0; color: var(--gold-hi); }
+
+/* toast */
+#toast-root { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 70; width: min(520px, 92vw); }
+.toast {
+  background: #1d2536; border: 1px solid var(--gold); color: var(--ink);
+  border-radius: 10px; padding: 12px 16px; margin-top: 8px; font-size: 15px; line-height: 1.5;
+  opacity: 0; transform: translateY(10px); transition: all 0.3s ease;
+}
+.toast.show { opacity: 1; transform: none; }
+
+/* pause */
+#pause-menu { position: fixed; inset: 0; z-index: 65; display: none; background: rgba(4,6,12,0.85); align-items: center; justify-content: center; padding: 16px; }
+#pause-menu.open { display: flex; }
+.pause-box { background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius); padding: 24px; width: min(380px, 92vw); }
+.pause-box h3 { margin-top: 0; color: var(--gold-hi); text-align: center; }
+
+footer { text-align: center; color: var(--ink-dim); font-size: 12px; padding: 14px; }
+
+@media (max-width: 560px) {
+  #hud { font-size: 13px; padding: 8px; }
+  #hud .brand { font-size: 13px; }
+  .icon-btn { min-width: 40px; min-height: 40px; }
+  #stage { padding: 10px; }
+  .hotspot { width: 56px; height: 56px; margin: -28px 0 0 -28px; }
+}
+
+</style>
+<!--
+  CrazyGames SDK integration point:
+  CrazyGames injects their official SDK script on their portal during/after
+  submission. This build calls window.CrazyGames.SDK only through js/platform.js,
+  which safely no-ops when the SDK is absent (itch.io / local play).
+  No SDK script tag is bundled here — nothing to change between portals.
+-->
+</head>
+<body>
+<div id="app">
+
+  <header id="hud" class="hidden">
+    <div class="brand">BEAST KID: CASE FILES</div>
+    <div class="hud-stat">🔍 <b id="hud-clues">0/8</b></div>
+    <div class="hud-stat">⏱️ <b id="hud-time">00:00</b></div>
+    <div class="hud-stat">⭐ <b id="hud-score">0</b></div>
+    <div class="hud-btns">
+      <button class="icon-btn" id="btn-journal" title="Detective's journal" aria-label="Open journal">📋</button>
+      <button class="icon-btn" id="btn-hint" title="Get a hint" aria-label="Get a hint">💡</button>
+      <button class="icon-btn" id="btn-mute" title="Mute" aria-label="Mute">🔊</button>
+      <button class="icon-btn" id="btn-pause" title="Pause" aria-label="Pause">⏸️</button>
+    </div>
+  </header>
+
+  <main id="stage">
+
+    <!-- TITLE -->
+    <section id="screen-title" class="screen">
+      <div class="game-kicker">Beast Kid presents</div>
+      <h1 class="game-title">CASE FILES <em>— No. 1</em></h1>
+      <div class="title-art">🕵️‍♂️</div>
+      <h2 class="game-sub">The Somerton Man · Adelaide, 1948</h2>
+      <p class="game-sub">A man with no name. A scrap of paper with two strange words.<br>Eight clues. One deduction board. The truth is yours to find.</p>
+      <button class="btn primary" id="btn-begin">🔍 Begin the investigation</button>
+      <button class="btn" id="btn-how">How to play</button>
+    </section>
+
+    <!-- INTRO -->
+    <section id="screen-intro" class="screen hidden">
+      <div id="intro-kicker"></div>
+      <h2 id="intro-title"></h2>
+      <p id="intro-text"></p>
+      <div id="intro-count"></div>
+      <div class="btn-row">
+        <button class="btn" id="btn-intro-back">← Back</button>
+        <button class="btn primary" id="btn-intro-next">Next →</button>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section id="screen-map" class="screen hidden">
+      <div class="map-head">
+        <h2>🗺️ Case map — Adelaide, 1948</h2>
+        <p>Travel between locations. Find the evidence. Talk to everyone.</p>
+      </div>
+      <div id="map-cards"></div>
+      <button class="btn primary" id="btn-deduction" disabled></button>
+    </section>
+
+    <!-- SCENE -->
+    <section id="screen-scene" class="screen hidden">
+      <div class="scene-head">
+        <h2 id="scene-name"></h2>
+        <div class="sub" id="scene-sub"></div>
+        <p class="blurb" id="scene-blurb"></p>
+      </div>
+      <div class="scene-frame">
+        <div id="scene-art"></div>
+        <div id="hotspot-layer"></div>
+      </div>
+      <div id="talk-row"></div>
+      <button class="btn" id="btn-map" style="margin-top:12px">← Back to case map</button>
+    </section>
+
+    <!-- DEDUCTION -->
+    <section id="screen-deduction" class="screen hidden">
+      <div class="ded-head">
+        <h2>🧬 The deduction board</h2>
+        <p id="ded-progress"></p>
+        <p style="color:var(--ink-dim);font-style:italic">Three theories. One file to close. Weigh what you found — the real case was never solved, so every theory is a gamble.</p>
+      </div>
+      <div id="theory-cards"></div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="screen-results" class="screen hidden">
+      <div class="game-kicker">Case closed</div>
+      <div class="res-rank" id="res-rank"></div>
+      <p>You closed the file on the theory:</p>
+      <h3 id="res-theory" style="color:var(--gold-hi)"></h3>
+      <div class="res-box">
+        <h4>📜 Evidence backing your theory</h4>
+        <ul id="res-evidence"></ul>
+      </div>
+      <div class="res-box">
+        <h4>⭐ Score breakdown</h4>
+        <ul id="res-score"></ul>
+      </div>
+      <p class="real-note">The real Somerton Man case was never officially solved — he remains one of Australia’s most famous unidentified dead. Your deduction is your own.</p>
+      <div class="next-case">🔜 <b>Next case file:</b> <i>The Sodder Children</i> — five children vanish from a burning house on Christmas Eve, 1945. Coming soon.</div>
+      <button class="btn primary" id="btn-again">🔁 Play again</button>
+    </section>
+
+  </main>
+
+  <footer>Beast Kid: Case Files · free to play · a Beast Kid mystery</footer>
+</div>
+
+<!-- JOURNAL -->
+<aside id="journal" aria-label="Detective's journal">
+  <div class="journal-head">
+    <h3>📋 Detective’s journal</h3>
+    <button class="icon-btn" id="journal-close" aria-label="Close journal">✕</button>
+  </div>
+  <div id="journal-body"></div>
+</aside>
+
+<!-- PAUSE -->
+<div id="pause-menu">
+  <div class="pause-box">
+    <h3>⏸️ Paused</h3>
+    <button class="btn primary" id="btn-resume">Resume</button>
+    <button class="btn" id="btn-pause-how">How to play</button>
+    <button class="btn" id="btn-restart">Restart case</button>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<!-- inlined js/platform.js -->
+<!-- inlined js/audio.js -->
+<!-- inlined js/data.js -->
+<!-- inlined js/game.js -->
+<script>
+/* =========================================================================
+ * platform.js — CrazyGames SDK (v3) adapter + standalone fallback
+ * -------------------------------------------------------------------------
+ * INTEGRATION POINT — how the CrazyGames SDK gets into the page:
+ *   CrazyGames injects their official SDK script into the game page on
+ *   THEIR portal during/after submission (this is how their HTML5 pipeline
+ *   works — the game code itself only needs to call window.CrazyGames.SDK).
+ *   Nothing is bundled here and no script URL is guessed.
+ *
+ * Every method below is guarded: when the game runs on itch.io, locally,
+ * or anywhere outside CrazyGames, window.CrazyGames is undefined and every
+ * call safely no-ops. The SAME build therefore works on both portals with
+ * zero changes.
+ *
+ * Verified against CrazyGames SDK v3 docs (Sept 2026):
+ *   - game.gameplayStart()  — entering/resuming active gameplay
+ *   - game.gameplayStop()   — menus, pauses, breaks (NOT tab blur; CG handles)
+ *   - game.sdkGameLoadingStart/Stop() — asset loading signals
+ *   - game.happyTime()      — positive player moment (boosts ad yield)
+ *   - ad.requestAd("midgame", {adStarted, adFinished, adError})
+ *   - ad.requestAd("rewarded", {adStarted, adFinished, adError})
+ *     * grant rewarded items ONLY on adFinished; adError = no reward
+ *     * midgame ads only at natural gameplay breaks, never mid-action
+ * ========================================================================= */
+(function (root) {
+  "use strict";
+
+  function getSDK() {
+    try {
+      return root.CrazyGames && root.CrazyGames.SDK ? root.CrazyGames.SDK : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  var Platform = {
+    /** true when actually running inside the CrazyGames portal */
+    get isCrazyGames() {
+      return !!getSDK();
+    },
+
+    /** call once during boot */
+    loadingStart: function () {
+      var sdk = getSDK();
+      if (sdk && sdk.game && sdk.game.sdkGameLoadingStart) {
+        try { sdk.game.sdkGameLoadingStart(); } catch (e) {}
+      }
+    },
+
+    /** call once boot is complete */
+    loadingDone: function () {
+      var sdk = getSDK();
+      if (sdk && sdk.game && sdk.game.sdkGameLoadingStop) {
+        try { sdk.game.sdkGameLoadingStop(); } catch (e) {}
+      }
+    },
+
+    /** player entered or resumed active gameplay */
+    gameplayStart: function () {
+      var sdk = getSDK();
+      if (sdk && sdk.game && sdk.game.gameplayStart) {
+        try { sdk.game.gameplayStart(); } catch (e) {}
+      }
+    },
+
+    /** player hit a break: pause menu, map, deduction board, results */
+    gameplayStop: function () {
+      var sdk = getSDK();
+      if (sdk && sdk.game && sdk.game.gameplayStop) {
+        try { sdk.game.gameplayStop(); } catch (e) {}
+      }
+    },
+
+    /** positive moment — called when the case is solved */
+    happyTime: function () {
+      var sdk = getSDK();
+      if (sdk && sdk.game && sdk.game.happyTime) {
+        try { sdk.game.happyTime(); } catch (e) {}
+      }
+    },
+
+    /**
+     * Midgame ad at a NATURAL break (we call it before the deduction board).
+     * Returns a Promise that always resolves — the game continues whether
+     * the ad played, errored, was blocked, or the SDK is absent.
+     */
+    midgameAd: function () {
+      var sdk = getSDK();
+      return new Promise(function (resolve) {
+        if (!sdk || !sdk.ad || !sdk.ad.requestAd) { resolve(); return; }
+        var done = false;
+        function finish() { if (!done) { done = true; resolve(); } }
+        try {
+          sdk.ad.requestAd("midgame", {
+            adStarted: function () {},
+            adFinished: finish,
+            adError: finish
+          });
+          // Safety net: never hang the game on an ad callback.
+          setTimeout(finish, 15000);
+        } catch (e) { finish(); }
+      });
+    },
+
+    /**
+     * Rewarded ad, ALWAYS user-initiated (the "watch ad for a hint" button).
+     * cb(true)  -> adFinished: grant the reward.
+     * cb(false) -> adError / no SDK: NEVER grant; caller shows a message.
+     */
+    rewardedAd: function (cb) {
+      var sdk = getSDK();
+      if (!sdk || !sdk.ad || !sdk.ad.requestAd) { cb(false); return; }
+      var settled = false;
+      function no(e)  { if (!settled) { settled = true; cb(false); } }
+      function yes()  { if (!settled) { settled = true; cb(true); } }
+      try {
+        sdk.ad.requestAd("rewarded", {
+          adStarted: function () {},
+          adFinished: yes,
+          adError: no
+        });
+        setTimeout(no, 15000);
+      } catch (e) { no(e); }
+    }
+  };
+
+  root.Platform = Platform;
+})(typeof window !== "undefined" ? window : this);
+
+/* =========================================================================
+ * audio.js — tiny generated sound effects (Web Audio, zero assets)
+ * All sounds are synthesized; no audio files needed. Respects the mute
+ * toggle, initializes on first user gesture (browser autoplay policy).
+ * ========================================================================= */
+(function (root) {
+  "use strict";
+
+  var ctx = null;
+  var ambientNodes = null;
+  var muted = false;
+  try { muted = root.localStorage && root.localStorage.getItem("bk_muted") === "1"; } catch (e) {}
+
+  function ensure() {
+    if (!ctx) {
+      try {
+        var AC = root.AudioContext || root.webkitAudioContext;
+        if (AC) ctx = new AC();
+      } catch (e) { ctx = null; }
+    }
+    if (ctx && ctx.state === "suspended") { ctx.resume(); }
+    return ctx;
+  }
+
+  function tone(freq, dur, type, vol, when) {
+    if (muted) return;
+    var c = ensure();
+    if (!c) return;
+    try {
+      var t = c.currentTime + (when || 0);
+      var o = c.createOscillator();
+      var g = c.createGain();
+      o.type = type || "sine";
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.12, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+    } catch (e) {}
+  }
+
+  var AudioFX = {
+    get muted() { return muted; },
+
+    toggleMute: function () {
+      muted = !muted;
+      try { if (root.localStorage) root.localStorage.setItem("bk_muted", muted ? "1" : "0"); } catch (e) {}
+      if (muted) this.stopAmbient();
+      return muted;
+    },
+
+    unlock: function () { ensure(); },           // call on first tap/click
+    click: function () { tone(620, 0.06, "triangle", 0.10); },
+    clue:  function () {                          // little "discovery" chime
+      tone(523.25, 0.12, "sine", 0.14);
+      tone(783.99, 0.18, "sine", 0.12, 0.10);
+    },
+    paper: function () { tone(220, 0.08, "sawtooth", 0.05); tone(330, 0.06, "sawtooth", 0.04, 0.05); },
+    success: function () {                       // case solved
+      tone(392, 0.15, "sine", 0.14);
+      tone(523.25, 0.15, "sine", 0.14, 0.12);
+      tone(659.25, 0.25, "sine", 0.14, 0.24);
+    },
+
+    /** very quiet noir drone; safe to leave running, mute stops it */
+    startAmbient: function () {
+      if (muted || ambientNodes) return;
+      var c = ensure();
+      if (!c) return;
+      try {
+        var g = c.createGain();
+        g.gain.value = 0.035;
+        var f = c.createBiquadFilter();
+        f.type = "lowpass"; f.frequency.value = 220;
+        var o1 = c.createOscillator(); o1.type = "sine"; o1.frequency.value = 55;
+        var o2 = c.createOscillator(); o2.type = "sine"; o2.frequency.value = 55 * 1.5;
+        o1.connect(f); o2.connect(f); f.connect(g); g.connect(c.destination);
+        o1.start(); o2.start();
+        ambientNodes = { o1: o1, o2: o2, g: g };
+      } catch (e) {}
+    },
+
+    stopAmbient: function () {
+      if (!ambientNodes) return;
+      try {
+        ambientNodes.g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+        var n = ambientNodes;
+        setTimeout(function () { try { n.o1.stop(); n.o2.stop(); } catch (e) {} }, 500);
+      } catch (e) {}
+      ambientNodes = null;
+    }
+  };
+
+  root.AudioFX = AudioFX;
+})(typeof window !== "undefined" ? window : this);
+
+/* =========================================================================
+ * data.js — ALL story content for Case #1: The Somerton Man
+ * Facts are based on the real 1948 Somerton Man case (Adelaide, Australia),
+ * told in a family-friendly, non-graphic way. Scenes are hand-drawn inline
+ * SVG (no image files, so the game always loads).
+ * UMD-ish: usable in the browser (window.BK_DATA) and in Node tests.
+ * ========================================================================= */
+(function (root) {
+  "use strict";
+
+  /* ------------------------------- CLUES -------------------------------- */
+  var CLUES = {
+    scrap: {
+      name: "The 'Tamam Shud' Scrap", icon: "\uD83D\uDCDC", scene: "beach",
+      desc: "In the fob pocket of his trousers: a tiny scrap of paper, torn from a book. Two words are printed on it: TAMAM SHUD \u2014 Persian for \u2018it is ended\u2019.",
+      flavor: "The scrap is bagged as evidence. Those two words feel like a message."
+    },
+    cigarettes: {
+      name: "Mismatched Cigarettes", icon: "\uD83D\uDEAC", scene: "beach",
+      desc: "An Army Club cigarette packet in his coat pocket \u2014 but inside are seven Kensitas, a dearer brand. A half-smoked cigarette rests on his right collar.",
+      flavor: "Army Club packet, Kensitas cigarettes. A man who hides what he smokes?"
+    },
+    labels: {
+      name: "Removed Labels", icon: "\u2702\uFE0F", scene: "beach",
+      desc: "Every clothing label has been carefully cut away \u2014 shirt, tie, trousers, even his coat. Someone went to great trouble so this man could not be named.",
+      flavor: "No maker\u2019s marks anywhere. Deliberate, patient work with small scissors."
+    },
+    autopsy: {
+      name: "The Coroner\u2019s Report", icon: "\uD83D\uDDC2\uFE0F", scene: "station",
+      desc: "No wound. No disease the coroner could name. A full examination finds nothing that explains why a healthy man in his forties simply stopped living.",
+      flavor: "Cause of death: unascertained. The coroner has never written those words before."
+    },
+    bust: {
+      name: "The Plaster Bust", icon: "\uD83D\uDDFF", scene: "station",
+      desc: "Police made a plaster cast of the man\u2019s head and shoulders, hoping someone would recognise him. Hundreds came to look. Nobody knew his name.",
+      flavor: "The bust stares back at you. Somewhere, someone must be missing him."
+    },
+    suitcase: {
+      name: "The Station Suitcase", icon: "\uD83E\uDDF3", scene: "railway",
+      desc: "A brown suitcase checked into Adelaide station\u2019s cloakroom on November 30th \u2014 the day before the body was found. The claim ticket was never used.",
+      flavor: "One suitcase, checked the day before he died. He planned to come back."
+    },
+    keane: {
+      name: "The Name \u2018T. Keane\u2019", icon: "\uD83C\uDFF7\uFE0F", scene: "railway",
+      desc: "Inside the suitcase: neatly folded clothes, every label removed \u2014 but three items are marked \u2018T. Keane\u2019. No missing person of that name is ever found.",
+      flavor: "T. Keane. A real name, or another layer of disguise?"
+    },
+    rubaiyat: {
+      name: "The Rubaiyat & The Code", icon: "\uD83D\uDCD6", scene: "car",
+      desc: "A rare edition of The Rubaiyat of Omar Khayyam, found in the back of an unlocked car near the beach. Its final page is torn out \u2014 and the scrap in his pocket fits the gap exactly. Inside the cover: a mysterious code of handwritten letters.",
+      flavor: "The torn page matches. This book is the heart of the case."
+    }
+  };
+
+  /* ------------------------------- SCENES ------------------------------- */
+  /* Hotspot x/y are % positions inside the scene frame.                    */
+  var SCENES = {
+    beach: {
+      name: "Somerton Beach", sub: "Dawn \u00B7 December 1st, 1948",
+      blurb: "A cold wind off the water. Against the seawall rests a well-dressed man, as if asleep. He will never wake.",
+      hotspots: [
+        { id: "hs-scrap", clue: "scrap", x: 47, y: 63, label: "Fob pocket" },
+        { id: "hs-cig", clue: "cigarettes", x: 63, y: 50, label: "Coat pocket" },
+        { id: "hs-labels", clue: "labels", x: 35, y: 74, label: "His clothing" }
+      ],
+      npcs: ["walker"],
+      art:
+      '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      '<defs><linearGradient id="sk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1026"/><stop offset="0.55" stop-color="#233a5e"/><stop offset="1" stop-color="#e8a35c"/></linearGradient>' +
+      '<linearGradient id="se1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16324a"/><stop offset="1" stop-color="#0a1a2b"/></linearGradient>' +
+      '<radialGradient id="lg1" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffcf7d" stop-opacity="0.85"/><stop offset="1" stop-color="#ffcf7d" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="800" height="300" fill="url(#sk1)"/>' +
+      '<circle cx="620" cy="120" r="34" fill="#f5e7c8" opacity="0.9"/>' +
+      '<ellipse cx="200" cy="90" rx="90" ry="18" fill="#0b1026" opacity="0.5"/><ellipse cx="420" cy="140" rx="120" ry="20" fill="#0b1026" opacity="0.4"/>' +
+      '<rect y="250" width="800" height="90" fill="url(#se1)"/>' +
+      '<path d="M0 270 q40 -8 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0" stroke="#3d6a8a" stroke-width="3" fill="none" opacity="0.7"/>' +
+      '<path d="M0 295 q50 -10 100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0 t100 0" stroke="#2c4f66" stroke-width="3" fill="none" opacity="0.6"/>' +
+      '<rect y="340" width="800" height="160" fill="#232a38"/>' +
+      '<rect y="330" width="800" height="26" fill="#3a4356"/><rect y="330" width="800" height="6" fill="#4a5468"/>' +
+      '<g opacity="0.95"><ellipse cx="400" cy="420" rx="52" ry="16" fill="#0a0d14"/>' +
+      '<path d="M372 418 q-6 -60 22 -84 q10 -8 20 2 q22 30 18 82 z" fill="#10141d"/>' +
+      '<circle cx="392" cy="322" r="17" fill="#10141d"/>' +
+      '<path d="M360 380 l-34 26 M424 378 l36 22" stroke="#10141d" stroke-width="13" stroke-linecap="round"/></g>' +
+      '<rect x="120" y="180" width="10" height="160" fill="#141a26"/><circle cx="125" cy="172" r="14" fill="#ffcf7d"/>' +
+      '<ellipse cx="125" cy="172" rx="46" ry="46" fill="url(#lg1)"/>' +
+      '<rect x="640" y="380" width="110" height="14" fill="#141a26"/><rect x="648" y="394" width="10" height="40" fill="#141a26"/><rect x="732" y="394" width="10" height="40" fill="#141a26"/>' +
+      '</svg>'
+    },
+
+    station: {
+      name: "Police Station", sub: "Adelaide \u00B7 Case File No. 1948-118",
+      blurb: "Detective Sergeant Lawson\u2019s desk. The file on the Somerton Man grows thicker \u2014 and no thinner of mystery.",
+      hotspots: [
+        { id: "hs-autopsy", clue: "autopsy", x: 30, y: 58, label: "Coroner\u2019s report" },
+        { id: "hs-bust", clue: "bust", x: 72, y: 36, label: "Plaster bust" }
+      ],
+      npcs: ["lawson"],
+      art:
+      '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      '<defs><radialGradient id="dl1" cx="0.5" cy="0.35" r="0.65"><stop offset="0" stop-color="#ffcf7d" stop-opacity="0.5"/><stop offset="1" stop-color="#ffcf7d" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="800" height="500" fill="#12161f"/>' +
+      '<rect width="800" height="330" fill="#1a2030"/>' +
+      '<rect x="60" y="60" width="200" height="150" fill="#232b3f"/>' +
+      '<rect x="60" y="60" width="200" height="150" fill="none" stroke="#39445e" stroke-width="4"/>' +
+      '<rect x="80" y="84" width="70" height="90" fill="#d8cdb4" opacity="0.85" transform="rotate(-4 80 84)"/>' +
+      '<rect x="160" y="90" width="70" height="90" fill="#cfc39f" opacity="0.8" transform="rotate(3 160 90)"/>' +
+      '<rect x="540" y="40" width="200" height="26" fill="#2a3247"/>' +
+      '<g><circle cx="640" cy="120" r="26" fill="#c9bfa8"/><path d="M610 150 q30 -14 60 0 l8 44 h-76 z" fill="#c9bfa8"/><rect x="606" y="192" width="68" height="14" fill="#3a2f22"/></g>' +
+      '<rect y="330" width="800" height="170" fill="#241a12"/>' +
+      '<rect x="150" y="330" width="500" height="26" fill="#31241a"/>' +
+      '<g><rect x="212" y="300" width="120" height="34" fill="#e5d9bd" transform="rotate(-3 212 300)"/><rect x="222" y="312" width="100" height="4" fill="#8a7c5c"/><rect x="222" y="320" width="80" height="4" fill="#8a7c5c"/></g>' +
+      '<rect x="470" y="230" width="12" height="110" fill="#141a26"/><path d="M440 230 h52 l-8 -26 h-36 z" fill="#1d2536"/>' +
+      '<ellipse cx="466" cy="204" rx="18" ry="12" fill="#ffcf7d"/><ellipse cx="466" cy="280" rx="150" ry="120" fill="url(#dl1)"/>' +
+      '<circle cx="120" cy="420" r="60" fill="#0d1119" opacity="0.6"/>' +
+      '</svg>'
+    },
+
+    railway: {
+      name: "Railway Station", sub: "Cloakroom \u00B7 November 30th, revisited",
+      blurb: "Rows of lockers, a slow clock, and one brown suitcase nobody came back for.",
+      hotspots: [
+        { id: "hs-suitcase", clue: "suitcase", x: 50, y: 44, label: "Brown suitcase" },
+        { id: "hs-keane", clue: "keane", x: 50, y: 66, label: "Search inside", requires: "suitcase" }
+      ],
+      npcs: ["porter"],
+      art:
+      '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      '<defs><linearGradient id="wl1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b2333"/><stop offset="1" stop-color="#111725"/></linearGradient></defs>' +
+      '<rect width="800" height="500" fill="url(#wl1)"/>' +
+      '<g>' +
+      '<rect x="60" y="90" width="140" height="110" fill="#2b3550" stroke="#46536f" stroke-width="3"/><rect x="60" y="210" width="140" height="110" fill="#273049" stroke="#46536f" stroke-width="3"/>' +
+      '<rect x="220" y="90" width="140" height="110" fill="#2b3550" stroke="#46536f" stroke-width="3"/><rect x="220" y="210" width="140" height="110" fill="#273049" stroke="#46536f" stroke-width="3"/>' +
+      '<rect x="380" y="90" width="140" height="230" fill="#3a2c1e" stroke="#6b543a" stroke-width="4"/>' +
+      '<rect x="400" y="180" width="100" height="60" fill="#4a3826" stroke="#6b543a" stroke-width="2"/><circle cx="450" cy="210" r="7" fill="#c9a86a"/>' +
+      '<rect x="540" y="90" width="140" height="110" fill="#2b3550" stroke="#46536f" stroke-width="3"/><rect x="540" y="210" width="140" height="110" fill="#273049" stroke="#46536f" stroke-width="3"/>' +
+      '</g>' +
+      '<circle cx="120" cy="400" r="46" fill="#0e1320" stroke="#46536f" stroke-width="5"/><circle cx="120" cy="400" r="38" fill="#d8d2c0"/>' +
+      '<line x1="120" y1="400" x2="120" y2="372" stroke="#1a2030" stroke-width="5" stroke-linecap="round"/><line x1="120" y1="400" x2="140" y2="410" stroke="#1a2030" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="120" cy="400" r="5" fill="#1a2030"/>' +
+      '<rect x="600" y="360" width="150" height="16" fill="#2b2419"/><rect x="610" y="376" width="12" height="60" fill="#2b2419"/><rect x="728" y="376" width="12" height="60" fill="#2b2419"/>' +
+      '<g opacity="0.9"><circle cx="700" cy="300" r="16" fill="#141a26"/><path d="M682 318 q18 -8 36 0 l6 60 h-48 z" fill="#1d2a3f"/></g>' +
+      '</svg>'
+    },
+
+    car: {
+      name: "The Unlocked Car", sub: "Jetty Road \u00B7 near the beach",
+      blurb: "An unlocked car parked near the beach. On the back seat: a book nobody has claimed.",
+      locked: true,
+      hotspots: [
+        { id: "hs-rubaiyat", clue: "rubaiyat", x: 55, y: 55, label: "The book" }
+      ],
+      npcs: [],
+      art:
+      '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      '<defs><linearGradient id="ns1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b16"/><stop offset="1" stop-color="#14233a"/></linearGradient>' +
+      '<radialGradient id="bg1" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffe9b8" stop-opacity="0.9"/><stop offset="1" stop-color="#ffe9b8" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="800" height="500" fill="url(#ns1)"/>' +
+      '<circle cx="140" cy="90" r="26" fill="#f5e7c8" opacity="0.85"/>' +
+      '<rect y="380" width="800" height="120" fill="#0d1420"/>' +
+      '<g><rect x="140" y="250" width="520" height="110" rx="46" fill="#1c2740"/>' +
+      '<rect x="230" y="200" width="340" height="90" rx="40" fill="#233252"/>' +
+      '<rect x="260" y="215" width="120" height="60" rx="18" fill="#0d1626"/><rect x="420" y="215" width="120" height="60" rx="18" fill="#0d1626"/>' +
+      '<rect x="470" y="222" width="52" height="46" rx="6" fill="#7a5c36" transform="rotate(-8 470 222)"/>' +
+      '<rect x="478" y="230" width="36" height="4" fill="#3d2f1c"/><rect x="478" y="238" width="28" height="4" fill="#3d2f1c"/>' +
+      '<ellipse cx="470" cy="245" rx="60" ry="40" fill="url(#bg1)"/>' +
+      '<circle cx="240" cy="370" r="42" fill="#0a0e18" stroke="#39445e" stroke-width="6"/><circle cx="560" cy="370" r="42" fill="#0a0e18" stroke="#39445e" stroke-width="6"/>' +
+      '<rect x="120" y="300" width="34" height="18" rx="8" fill="#ffdf9e" opacity="0.9"/></g>' +
+      '<rect x="60" y="120" width="10" height="260" fill="#141a26"/><circle cx="65" cy="112" r="12" fill="#ffcf7d"/><ellipse cx="65" cy="112" rx="40" ry="40" fill="url(#bg1)" opacity="0.7"/>' +
+      '</svg>'
+    }
+  };
+
+  var SCENE_ORDER = ["beach", "station", "railway", "car"];
+
+  /* -------------------------------- NPCS ------------------------------- */
+  var NPCS = {
+    walker: {
+      name: "Morning Walker", scene: "beach", role: "Witness",
+      intro: "A woman walking her dog stops beside you, pulling her coat tight against the sea wind.",
+      topics: [
+        {
+          q: "Did you see anything last night?",
+          a: "A man was lying by the seawall as the sun went down. We thought he was sleeping \u2014 people doze on the beach. I\u2019m sorry we just walked on.",
+          note: "The man was on the beach hours before dawn \u2014 lying still while the evening walkers passed."
+        },
+        {
+          q: "Have the police said anything?",
+          a: "Only that he carried no name at all. But I heard an officer mention a suitcase \u2014 left at the railway station cloakroom. Funny place to leave your life, isn\u2019t it?",
+          hintScene: "railway"
+        }
+      ]
+    },
+    lawson: {
+      name: "Det. Sgt. Lawson", scene: "station", role: "Lead detective",
+      intro: "A tired man with ink on his fingers looks up from the case file. \u2018Another look at our nameless friend, eh?\u2019",
+      topics: [
+        {
+          q: "What does \u2018Tamam Shud\u2019 mean?",
+          requires: "scrap",
+          a: "Persian. \u2018It is ended.\u2019 Torn from a book of poems \u2014 The Rubaiyat of Omar Khayyam. We\u2019re checking every copy in the city. Find the book it was torn from, and we\u2019ll have our first real lead.",
+          unlockScene: "car",
+          note: "Lawson is hunting a rare book of Persian poetry. If it turns up, the car it was found in matters."
+        },
+        {
+          q: "What do the cigarettes tell you?",
+          requires: "cigarettes",
+          a: "A man buys an Army Club packet but smokes Kensitas? Either he borrowed the packet \u2014 or he wanted us reading the wrong label. File it under \u2018deliberate\u2019.",
+          note: "The mismatched cigarettes look deliberate \u2014 like the removed labels."
+        },
+        {
+          q: "Any idea who he is?",
+          a: "Forties, well-kept, strong hands, shoes polished. No wedding ring. Not a drifter \u2014 but beyond that? Nothing. It\u2019s as if he stepped out of nowhere."
+        }
+      ]
+    },
+    porter: {
+      name: "Station Porter", scene: "railway", role: "Cloakroom attendant",
+      intro: "An older man in a railway cap polishes the counter. \u2018That suitcase? Aye, I remember it.\u2019",
+      topics: [
+        {
+          q: "Who checked in this suitcase?",
+          requires: "suitcase",
+          a: "Yesterday morning. Well-dressed fellow, in a hurry, barely a word. Paid, took no ticket stub I could find later. Never came back for it.",
+          note: "The suitcase owner was in a hurry \u2014 and never returned."
+        },
+        {
+          q: "Does the name \u2018T. Keane\u2019 mean anything to you?",
+          requires: "keane",
+          a: "Never heard it \u2014 and I\u2019ve worked this station twenty years. If that\u2019s his name, he wasn\u2019t from around here.",
+          note: "\u2018T. Keane\u2019 matches no local. The name may be false \u2014 or borrowed."
+        }
+      ]
+    }
+  };
+
+  /* ------------------------------ THEORIES ------------------------------ */
+  var THEORIES = [
+    {
+      id: "spy",
+      title: "A spy on a secret mission",
+      desc: "Removed labels, a coded message, a book of Persian poetry \u2014 the tradecraft of a man who could not afford a name.",
+      supports: ["rubaiyat", "labels", "cigarettes"]
+    },
+    {
+      id: "farewell",
+      title: "He ended his own life",
+      desc: "\u2018It is ended.\u2019 No struggle, no panic \u2014 a man who put his affairs in order and lay down facing the sea.",
+      supports: ["scrap", "autopsy", "labels"]
+    },
+    {
+      id: "meeting",
+      title: "He came to meet someone",
+      desc: "A suitcase for a short stay, a borrowed name, an evening on the beach \u2014 a man waiting for someone who never came.",
+      supports: ["suitcase", "keane", "scrap"]
+    }
+  ];
+
+  /* -------------------------------- INTRO ------------------------------- */
+  var INTRO = [
+    {
+      kicker: "Adelaide, Australia",
+      title: "December 1st, 1948 \u00B7 6:30 AM",
+      text: "On Somerton beach, a well-dressed man is found resting against the seawall \u2014 as if asleep. He will never wake. In his pocket: no wallet, no name. Only questions."
+    },
+    {
+      kicker: "The mystery deepens",
+      title: "A man with no name",
+      text: "Every clothing label has been cut away. In his fob pocket, police find a tiny scrap of paper with two strange words: TAMAM SHUD. The inquest will call it one of Australia\u2019s strangest cases."
+    },
+    {
+      kicker: "Your assignment",
+      title: "Detective, the case is yours",
+      text: "Search four locations, question the witnesses, and gather at least 6 of the 8 clues. Then face the deduction board and close the file \u2014 if you can."
+    }
+  ];
+
+  var DATA = {
+    CLUES: CLUES,
+    SCENES: SCENES,
+    SCENE_ORDER: SCENE_ORDER,
+    NPCS: NPCS,
+    THEORIES: THEORIES,
+    INTRO: INTRO,
+    CLUES_TO_UNLOCK_DEDUCTION: 6,
+    RANKS: [
+      { min: 1100, title: "Chief Inspector" },
+      { min: 750, title: "Detective Sergeant" },
+      { min: 450, title: "Constable" },
+      { min: 0, title: "Rookie" }
+    ]
+  };
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = DATA;
+  } else {
+    root.BK_DATA = DATA;
+  }
+})(typeof window !== "undefined" ? window : this);
+
+/* =========================================================================
+ * game.js — "Beast Kid: Case Files — Case #1: The Somerton Man"
+ * Point-and-click detective game. Vanilla JS, no dependencies.
+ * ========================================================================= */
+(function () {
+  "use strict";
+
+  var D = window.BK_DATA;
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* ------------------------------ state -------------------------------- */
+  function freshState() {
+    return {
+      clues: {},          // clueId -> true
+      notes: [],          // {text}
+      asked: {},          // "npc:index" -> true (dialogue asked once)
+      scenes: ["beach", "station", "railway"],
+      screen: "title",
+      scene: null,
+      score: 0,
+      hints: 0,
+      elapsed: 0,         // seconds of active play
+      timerId: null,
+      finished: false,
+      theory: null
+    };
+  }
+  var state = freshState();
+
+  /* ---------------------------- helpers -------------------------------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function clueCount() { return Object.keys(state.clues).length; }
+  function fmtTime(sec) {
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+  }
+
+  function toast(msg, ms) {
+    var root = $("#toast-root");
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = msg;
+    root.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add("show"); });
+    setTimeout(function () {
+      el.classList.remove("show");
+      setTimeout(function () { el.remove(); }, 400);
+    }, ms || 3400);
+  }
+
+  function openModal(html) {
+    var root = $("#modal-root");
+    root.innerHTML = '<div class="modal-back"><div class="modal">' + html + "</div></div>";
+    root.classList.add("open");
+    var back = root.querySelector(".modal-back");
+    back.addEventListener("click", function (e) {
+      if (e.target === back) closeModal();
+    });
+  }
+  function closeModal() {
+    var root = $("#modal-root");
+    root.classList.remove("open");
+    root.innerHTML = "";
+  }
+
+  /* ------------------------------ HUD ---------------------------------- */
+  function updateHUD() {
+    $("#hud-clues").textContent = clueCount() + "/" + Object.keys(D.CLUES).length;
+    $("#hud-time").textContent = fmtTime(state.elapsed);
+    $("#hud-score").textContent = state.score;
+    var muteBtn = $("#btn-mute");
+    muteBtn.textContent = window.AudioFX.muted ? "\uD83D\uDD07" : "\uD83D\uDD0A";
+    muteBtn.setAttribute("aria-label", window.AudioFX.muted ? "Unmute" : "Mute");
+  }
+
+  function startTimer() {
+    stopTimer();
+    state.timerId = setInterval(function () {
+      state.elapsed++;
+      $("#hud-time").textContent = fmtTime(state.elapsed);
+    }, 1000);
+  }
+  function stopTimer() {
+    if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+  }
+
+  function showScreen(name) {
+    state.screen = name;
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) screens[i].classList.add("hidden");
+    $("#screen-" + name).classList.remove("hidden");
+    $("#hud").classList.toggle("hidden", name === "title" || name === "results");
+    window.scrollTo(0, 0);
+  }
+
+  /* --------------------------- title / intro ---------------------------- */
+  var introIdx = 0;
+  function renderIntro() {
+    var c = D.INTRO[introIdx];
+    $("#intro-kicker").textContent = c.kicker;
+    $("#intro-title").textContent = c.title;
+    $("#intro-text").textContent = c.text;
+    $("#intro-count").textContent = (introIdx + 1) + " / " + D.INTRO.length;
+    $("#btn-intro-back").disabled = introIdx === 0;
+    $("#btn-intro-next").textContent = introIdx === D.INTRO.length - 1 ? "Open the case file \u2192" : "Next \u2192";
+  }
+
+  function beginInvestigation() {
+    window.AudioFX.unlock();
+    window.AudioFX.click();
+    showScreen("intro");
+    introIdx = 0;
+    renderIntro();
+  }
+
+  function finishIntro() {
+    window.AudioFX.click();
+    state.startTime = Date.now();
+    startTimer();
+    window.Platform.gameplayStart();   // active gameplay begins
+    window.AudioFX.startAmbient();
+    renderMap();
+    showScreen("map");
+  }
+
+  /* -------------------------------- map --------------------------------- */
+  function renderMap() {
+    var wrap = $("#map-cards");
+    wrap.innerHTML = "";
+    D.SCENE_ORDER.forEach(function (sid) {
+      var sc = D.SCENES[sid];
+      var locked = state.scenes.indexOf(sid) === -1;
+      var found = sc.hotspots.filter(function (h) { return state.clues[h.clue]; }).length;
+      var card = document.createElement("button");
+      card.className = "map-card" + (locked ? " locked" : "");
+      card.innerHTML =
+        '<div class="map-card-name">' + esc(sc.name) + "</div>" +
+        '<div class="map-card-sub">' + esc(sc.sub) + "</div>" +
+        (locked
+          ? '<div class="map-card-lock">\uD83D\uDD12 Locked \u2014 follow the evidence</div>'
+          : '<div class="map-card-progress">' + found + "/" + sc.hotspots.length + " clues</div>");
+      if (!locked) {
+        card.addEventListener("click", function () {
+          window.AudioFX.click();
+          openScene(sid);
+        });
+      } else {
+        card.addEventListener("click", function () {
+          toast("This location is locked. Keep following the evidence.");
+        });
+      }
+      wrap.appendChild(card);
+    });
+
+    var n = clueCount(), need = D.CLUES_TO_UNLOCK_DEDUCTION;
+    var btn = $("#btn-deduction");
+    btn.disabled = n < need;
+    btn.innerHTML = n >= need
+      ? "\uD83E\uDDEC Open the deduction board"
+      : "\uD83E\uDDEC Deduction board (" + n + "/" + need + " clues needed)";
+  }
+
+  /* ------------------------------- scene -------------------------------- */
+  function openScene(sid) {
+    state.scene = sid;
+    var sc = D.SCENES[sid];
+    window.Platform.gameplayStart();
+
+    $("#scene-art").innerHTML = sc.art;
+    $("#scene-name").textContent = sc.name;
+    $("#scene-sub").textContent = sc.sub;
+    $("#scene-blurb").textContent = sc.blurb;
+
+    // hotspots
+    var layer = $("#hotspot-layer");
+    layer.innerHTML = "";
+    sc.hotspots.forEach(function (hs) {
+      if (hs.requires && !state.clues[hs.requires]) return;   // chained clue
+      var found = !!state.clues[hs.clue];
+      var b = document.createElement("button");
+      b.className = "hotspot" + (found ? " found" : "");
+      b.style.left = hs.x + "%";
+      b.style.top = hs.y + "%";
+      b.setAttribute("aria-label", hs.label);
+      b.dataset.hs = hs.id;
+      b.innerHTML = "<span>" + (found ? "\u2713" : "?") + "</span>";
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();
+        onHotspot(hs);
+      });
+      layer.appendChild(b);
+    });
+
+    // NPC talk chips
+    var talk = $("#talk-row");
+    talk.innerHTML = "";
+    (sc.npcs || []).forEach(function (nid) {
+      var npc = D.NPCS[nid];
+      var b = document.createElement("button");
+      b.className = "talk-chip";
+      b.dataset.npc = nid;
+      b.innerHTML = "\uD83D\uDCAC Talk: " + esc(npc.name);
+      b.addEventListener("click", function () { openNPC(nid); });
+      talk.appendChild(b);
+    });
+
+    showScreen("scene");
+    updateHUD();
+  }
+
+  function pulseHotspot(hsId) {
+    var el = document.querySelector('[data-hs="' + hsId + '"]');
+    if (el) {
+      el.classList.add("pulse");
+      setTimeout(function () { el.classList.remove("pulse"); }, 2600);
+    }
+  }
+
+  function onHotspot(hs) {
+    window.AudioFX.click();
+    var clue = D.CLUES[hs.clue];
+    if (state.clues[hs.clue]) {
+      toast("<b>" + esc(clue.name) + ".</b> " + esc(clue.flavor));
+      return;
+    }
+    // award the clue
+    state.clues[hs.clue] = true;
+    state.score += 100;
+    window.AudioFX.clue();
+    openModal(
+      '<div class="clue-head"><span class="clue-icon">' + clue.icon + '</span>' +
+      '<h3>' + esc(clue.name) + "</h3></div>" +
+      "<p>" + esc(clue.desc) + "</p>" +
+      '<div class="clue-points">+100 pts \u00B7 added to your journal</div>' +
+      '<button class="btn primary" id="m-ok">Continue investigating</button>'
+    );
+    $("#m-ok").addEventListener("click", function () {
+      window.AudioFX.click();
+      closeModal();
+      openScene(state.scene);   // re-render: hotspot turns to checkmark
+      updateHUD();
+    });
+    updateHUD();
+  }
+
+  /* ------------------------------ dialogue ------------------------------ */
+  function openNPC(nid) {
+    window.AudioFX.click();
+    var npc = D.NPCS[nid];
+    var topics = npc.topics.map(function (t, i) {
+      var ok = !t.requires || state.clues[t.requires];
+      var asked = !!state.asked[nid + ":" + i];
+      return { t: t, i: i, ok: ok, asked: asked };
+    });
+    var html =
+      '<div class="npc-head"><h3>' + esc(npc.name) + '</h3><div class="npc-role">' + esc(npc.role) + "</div></div>" +
+      '<p class="npc-intro">' + esc(npc.intro) + "</p>" +
+      '<div class="topics">' +
+      topics.map(function (o) {
+        if (!o.ok) {
+          return '<button class="btn topic locked" disabled>\uD83D\uDD12 ' + esc(o.t.q) + "<small>Find more evidence first</small></button>";
+        }
+        return '<button class="btn topic" data-i="' + o.i + '">' + esc(o.t.q) +
+          (o.asked ? " <small>\u2713 asked</small>" : "") + "</button>";
+      }).join("") +
+      "</div>" +
+      '<button class="btn" id="m-ok">Leave</button>';
+    openModal(html);
+    $("#m-ok").addEventListener("click", function () { window.AudioFX.click(); closeModal(); });
+    var btns = document.querySelectorAll("#modal-root .topic:not(.locked)");
+    for (var k = 0; k < btns.length; k++) {
+      (function (b) {
+        b.addEventListener("click", function () {
+          answerTopic(nid, parseInt(b.dataset.i, 10));
+        });
+      })(btns[k]);
+    }
+  }
+
+  function answerTopic(nid, i) {
+    window.AudioFX.paper();
+    var npc = D.NPCS[nid];
+    var t = npc.topics[i];
+    var key = nid + ":" + i;
+    var first = !state.asked[key];
+    state.asked[key] = true;
+
+    var effects = "";
+    if (first) {
+      if (t.note) {
+        state.notes.push({ text: t.note });
+        state.score += 50;
+        effects += '<div class="fx">\uD83D\uDCDD Insight noted (+50 pts)</div>';
+      }
+      if (t.unlockScene && state.scenes.indexOf(t.unlockScene) === -1) {
+        state.scenes.push(t.unlockScene);
+        effects += '<div class="fx big">\uD83D\uDCCD New location unlocked: ' + esc(D.SCENES[t.unlockScene].name) + "</div>";
+        window.AudioFX.clue();
+      }
+      if (t.hintScene) {
+        effects += '<div class="fx">\uD83D\uDCA1 Worth a look: ' + esc(D.SCENES[t.hintScene].name) + "</div>";
+      }
+    }
+
+    openModal(
+      '<div class="npc-head"><h3>' + esc(npc.name) + "</h3></div>" +
+      '<p class="q">\u201C' + esc(t.q) + "\u201D</p>" +
+      '<p class="a">' + esc(t.a) + "</p>" +
+      effects +
+      '<button class="btn primary" id="m-ok">' + (t.unlockScene && first ? "Go to the map" : "Back") + "</button>"
+    );
+    $("#m-ok").addEventListener("click", function () {
+      window.AudioFX.click();
+      closeModal();
+      if (t.unlockScene && first) { renderMap(); showScreen("map"); }
+      else { openScene(state.scene); }
+      updateHUD();
+    });
+    updateHUD();
+  }
+
+  /* ------------------------------ journal ------------------------------- */
+  function openJournal() {
+    window.AudioFX.paper();
+    var ids = Object.keys(D.CLUES).filter(function (id) { return state.clues[id]; });
+    var html = "<h3>\uD83D\uDCCB Detective\u2019s journal</h3>";
+    html += '<div class="j-sec"><b>Clues ' + ids.length + "/" + Object.keys(D.CLUES).length + "</b></div>";
+    html += ids.length
+      ? ids.map(function (id) {
+          var c = D.CLUES[id];
+          return '<div class="j-clue"><span class="j-icon">' + c.icon + '</span><div><b>' + esc(c.name) + "</b><p>" + esc(c.desc) + "</p></div></div>";
+        }).join("")
+      : "<p class='j-empty'>No clues yet. Tap the glowing <b>?</b> markers in each location.</p>";
+    if (state.notes.length) {
+      html += '<div class="j-sec"><b>Insights</b></div>' + state.notes.map(function (n) {
+        return '<div class="j-note">\uD83D\uDCDD ' + esc(n.text) + "</div>";
+      }).join("");
+    }
+    $("#journal-body").innerHTML = html;
+    $("#journal").classList.add("open");
+  }
+  function closeJournal() { $("#journal").classList.remove("open"); }
+
+  /* -------------------------------- hint -------------------------------- */
+  function nextHintTarget() {
+    // 1) unlock guidance first: scrap found but car still locked -> Lawson
+    if (state.clues.scrap && state.scenes.indexOf("car") === -1) {
+      return { kind: "npc", scene: "station", npc: "lawson", msg: "Det. Sgt. Lawson at the <b>police station</b> is hunting a book. Ask him about \u2018Tamam Shud\u2019." };
+    }
+    // 2) first unfound, reachable hotspot in scene order
+    for (var s = 0; s < D.SCENE_ORDER.length; s++) {
+      var sid = D.SCENE_ORDER[s];
+      if (state.scenes.indexOf(sid) === -1) continue;
+      var sc = D.SCENES[sid];
+      for (var h = 0; h < sc.hotspots.length; h++) {
+        var hs = sc.hotspots[h];
+        if (hs.requires && !state.clues[hs.requires]) continue;
+        if (!state.clues[hs.clue]) return { kind: "hotspot", scene: sid, hs: hs };
+      }
+    }
+    return null;
+  }
+
+  function grantHint() {
+    var t = nextHintTarget();
+    state.hints++;
+    if (!t) {
+      toast("You\u2019ve found every clue. Time for the <b>deduction board</b>.");
+      return;
+    }
+    if (t.kind === "npc") { toast("\uD83D\uDCA1 " + t.msg); return; }
+    if (state.scene === t.scene) {
+      toast("\uD83D\uDCA1 Look closely at the <b>" + esc(t.hs.label.toLowerCase()) + "</b>\u2026");
+      pulseHotspot(t.hs.id);
+    } else {
+      toast("\uD83D\uDCA1 A clue waits at the <b>" + esc(D.SCENES[t.scene].name) + "</b>. Open the map to travel.");
+    }
+  }
+
+  function onHintButton() {
+    window.AudioFX.click();
+    if (window.Platform.isCrazyGames) {
+      // Rewarded ad flow: user-initiated, reward ONLY on adFinished.
+      var btn = $("#btn-hint");
+      btn.disabled = true;
+      toast("Loading hint\u2026");
+      window.Platform.rewardedAd(function (ok) {
+        btn.disabled = false;
+        if (ok) { grantHint(); }
+        else { toast("The ad couldn\u2019t load. Try again in a moment \u2014 the button still works."); }
+      });
+    } else {
+      // itch.io / local: free hint, small score cost, never a dead button.
+      state.score = Math.max(0, state.score - 50);
+      updateHUD();
+      grantHint();
+    }
+  }
+
+  /* ---------------------------- deduction ------------------------------- */
+  function openDeduction() {
+    if (clueCount() < D.CLUES_TO_UNLOCK_DEDUCTION) return;
+    window.AudioFX.click();
+    window.Platform.gameplayStop();          // natural break -> midgame ad slot
+    toast("The board is set. One last look at the evidence\u2026");
+    window.Platform.midgameAd().then(function () {
+      renderDeduction();
+      showScreen("deduction");
+    });
+  }
+
+  function renderDeduction() {
+    var wrap = $("#theory-cards");
+    wrap.innerHTML = "";
+    D.THEORIES.forEach(function (th) {
+      var card = document.createElement("div");
+      card.className = "theory-card";
+      var ev = th.supports.map(function (cid) {
+        var c = D.CLUES[cid];
+        return state.clues[cid]
+          ? '<li class="ev yes">\u2713 ' + esc(c.name) + "</li>"
+          : '<li class="ev no">\u00B7 undiscovered evidence</li>';
+      }).join("");
+      card.innerHTML =
+        "<h4>" + esc(th.title) + "</h4><p>" + esc(th.desc) + "</p>" +
+        '<ul class="ev-list">' + ev + "</ul>" +
+        '<button class="btn primary pick">Close the case: this theory</button>';
+      card.querySelector(".pick").addEventListener("click", function () {
+        window.AudioFX.click();
+        closeCase(th.id);
+      });
+      wrap.appendChild(card);
+    });
+    $("#ded-progress").textContent =
+      "Evidence gathered: " + clueCount() + "/" + Object.keys(D.CLUES).length +
+      " clues \u00B7 " + state.notes.length + " insights";
+  }
+
+  /* ------------------------------ results ------------------------------- */
+  function closeCase(theoryId) {
+    var th = D.THEORIES.filter(function (t) { return t.id === theoryId; })[0];
+    state.theory = th;
+    state.finished = true;
+    stopTimer();
+
+    var matched = th.supports.filter(function (cid) { return state.clues[cid]; });
+    var theoryPts = matched.length * 100;
+    var timeBonus = Math.max(0, 600 - state.elapsed);
+    state.score += theoryPts + timeBonus;
+
+    var rank = D.RANKS.filter(function (r) { return state.score >= r.min; })[0].title;
+
+    $("#res-rank").textContent = rank;
+    $("#res-theory").textContent = th.title;
+    $("#res-evidence").innerHTML = matched.length
+      ? matched.map(function (cid) { return "<li>\u2713 " + esc(D.CLUES[cid].name) + "</li>"; }).join("")
+      : "<li>No supporting evidence found \u2014 a bold guess, detective.</li>";
+    $("#res-score").innerHTML =
+      "<li>Clues found: <b>" + clueCount() + " \u00D7 100</b></li>" +
+      "<li>Insights: <b>" + state.notes.length + " \u00D7 50</b></li>" +
+      "<li>Evidence backing your theory: <b>" + matched.length + " \u00D7 100</b></li>" +
+      "<li>Time bonus (" + fmtTime(state.elapsed) + "): <b>+" + timeBonus + "</b></li>" +
+      "<li class='total'>Final score: <b>" + state.score + "</b></li>";
+
+    window.Platform.gameplayStop();
+    window.Platform.happyTime();
+    window.AudioFX.success();
+    window.AudioFX.stopAmbient();
+    showScreen("results");
+    updateHUD();
+  }
+
+  /* ------------------------------- pause -------------------------------- */
+  function openPause() {
+    window.AudioFX.click();
+    window.Platform.gameplayStop();
+    stopTimer();
+    $("#pause-menu").classList.add("open");
+  }
+  function closePause(resume) {
+    $("#pause-menu").classList.remove("open");
+    if (resume && !state.finished && (state.screen === "map" || state.screen === "scene")) {
+      window.Platform.gameplayStart();
+      startTimer();
+    }
+    window.AudioFX.click();
+  }
+
+  /* -------------------------------- boot -------------------------------- */
+  function init() {
+    window.Platform.loadingStart();
+
+    $("#btn-begin").addEventListener("click", beginInvestigation);
+    $("#btn-how").addEventListener("click", function () {
+      window.AudioFX.click();
+      openModal(
+        "<h3>How to play</h3>" +
+        "<p>\uD83D\uDD0D <b>Search</b> each location \u2014 tap the glowing <b>?</b> markers to collect clues.</p>" +
+        "<p>\uD83D\uDCAC <b>Question</b> witnesses and police. Some answers only unlock once you hold the right evidence.</p>" +
+        "<p>\uD83D\uDCCB Your <b>journal</b> keeps every clue and insight.</p>" +
+        "<p>\uD83E\uDDEC At <b>6 of 8 clues</b>, the deduction board opens: weigh the evidence and close the case.</p>" +
+        "<p>There are no dead ends \u2014 you can always keep investigating.</p>" +
+        '<button class="btn primary" id="m-ok">Got it</button>'
+      );
+      $("#m-ok").addEventListener("click", function () { window.AudioFX.click(); closeModal(); });
+    });
+
+    $("#btn-intro-next").addEventListener("click", function () {
+      if (introIdx < D.INTRO.length - 1) { introIdx++; window.AudioFX.click(); renderIntro(); }
+      else { finishIntro(); }
+    });
+    $("#btn-intro-back").addEventListener("click", function () {
+      if (introIdx > 0) { introIdx--; window.AudioFX.click(); renderIntro(); }
+    });
+
+    $("#btn-map").addEventListener("click", function () {
+      window.AudioFX.click();
+      window.Platform.gameplayStart();
+      renderMap();
+      showScreen("map");
+    });
+    $("#btn-deduction").addEventListener("click", openDeduction);
+
+    $("#btn-journal").addEventListener("click", openJournal);
+    $("#journal-close").addEventListener("click", function () { window.AudioFX.click(); closeJournal(); });
+    $("#btn-hint").addEventListener("click", onHintButton);
+    $("#btn-pause").addEventListener("click", openPause);
+    $("#btn-mute").addEventListener("click", function () {
+      window.AudioFX.unlock();
+      var m = window.AudioFX.toggleMute();
+      if (!m) window.AudioFX.startAmbient();
+      updateHUD();
+    });
+
+    $("#btn-resume").addEventListener("click", function () { closePause(true); });
+    $("#btn-restart").addEventListener("click", function () {
+      if (window.confirm("Restart the case from the beginning?")) {
+        $("#pause-menu").classList.remove("open");
+        location.reload();
+      }
+    });
+    $("#btn-pause-how").addEventListener("click", function () {
+      window.AudioFX.click();
+      $("#btn-how").click();
+    });
+    $("#btn-again").addEventListener("click", function () { location.reload(); });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        closeModal();
+        closeJournal();
+        if ($("#pause-menu").classList.contains("open")) closePause(true);
+      }
+    });
+    document.addEventListener("pointerdown", function () { window.AudioFX.unlock(); }, { once: true });
+
+    // Hint button label depends on portal: rewarded ad vs free hint.
+    if (window.Platform.isCrazyGames) {
+      $("#btn-hint").innerHTML = "\uD83D\uDCA1 Hint (\uD83D\uDCFA ad)";
+      $("#btn-hint").title = "Watch a short ad for a hint";
+    } else {
+      $("#btn-hint").innerHTML = "\uD83D\uDCA1 Hint (\u221250)";
+      $("#btn-hint").title = "Get a hint (costs 50 points)";
+    }
+
+    updateHUD();
+    showScreen("title");
+    window.Platform.loadingDone();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+</body>
+</html>
