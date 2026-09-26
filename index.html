@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0e16">
+<meta name="description" content="Beast Kid: Case Files — Case #1: The Somerton Man. A free point-and-click detective game. Search the evidence, question the witnesses, close the case.">
+<title>Beast Kid: Case Files — The Somerton Man</title>
+<link rel="stylesheet" href="style.css">
+<!--
+  CrazyGames SDK integration point:
+  CrazyGames injects their official SDK script on their portal during/after
+  submission. This build calls window.CrazyGames.SDK only through platform.js,
+  which safely no-ops when the SDK is absent (itch.io / local play).
+  No SDK script tag is bundled here — nothing to change between portals.
+-->
+</head>
+<body>
+<div id="app">
+
+  <header id="hud" class="hidden">
+    <div class="brand">BEAST KID: CASE FILES</div>
+    <div class="hud-stat">🔍 <b id="hud-clues">0/8</b></div>
+    <div class="hud-stat">⏱️ <b id="hud-time">00:00</b></div>
+    <div class="hud-stat">⭐ <b id="hud-score">0</b></div>
+    <div class="hud-btns">
+      <button class="icon-btn" id="btn-journal" title="Detective's journal" aria-label="Open journal">📋</button>
+      <button class="icon-btn" id="btn-hint" title="Get a hint" aria-label="Get a hint">💡</button>
+      <button class="icon-btn" id="btn-mute" title="Mute" aria-label="Mute">🔊</button>
+      <button class="icon-btn" id="btn-pause" title="Pause" aria-label="Pause">⏸️</button>
+    </div>
+  </header>
+
+  <main id="stage">
+
+    <!-- TITLE -->
+    <section id="screen-title" class="screen">
+      <div id="title-keyart"></div>
+      <div class="title-content">
+        <div class="game-kicker">Beast Kid presents</div>
+        <h1 class="game-title">CASE FILES <em>— No. 1</em></h1>
+        <h2 class="game-sub">The Somerton Man · Adelaide, 1948</h2>
+        <p class="title-blurb">A man with no name. A scrap of paper with two strange words.<br>Thirteen clues. One deduction board. The truth is yours to find.</p>
+        <button class="btn primary" id="btn-begin">Begin the investigation</button>
+        <button class="btn" id="btn-how">How to play</button>
+        <div id="best-line" class="hidden"></div>
+      </div>
+    </section>
+
+    <!-- INTRO -->
+    <section id="screen-intro" class="screen hidden">
+      <div id="intro-kicker"></div>
+      <h2 id="intro-title"></h2>
+      <p id="intro-text"></p>
+      <div id="intro-count"></div>
+      <div class="btn-row">
+        <button class="btn" id="btn-intro-back">← Back</button>
+        <button class="btn primary" id="btn-intro-next">Next →</button>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section id="screen-map" class="screen hidden">
+      <div class="map-head">
+        <h2>🗺️ Case map — Adelaide, 1948</h2>
+        <p>Travel between locations. Find the evidence. Talk to everyone.</p>
+      </div>
+      <div id="map-cards"></div>
+      <button class="btn primary" id="btn-deduction" disabled></button>
+    </section>
+
+    <!-- SCENE -->
+    <section id="screen-scene" class="screen hidden">
+      <div class="scene-head">
+        <h2 id="scene-name"></h2>
+        <div class="sub" id="scene-sub"></div>
+        <p class="blurb" id="scene-blurb"></p>
+      </div>
+      <div class="scene-frame">
+        <div id="scene-art"></div>
+        <div id="hotspot-layer"></div>
+      </div>
+      <div id="talk-row"></div>
+      <button class="btn" id="btn-map" style="margin-top:12px">← Back to case map</button>
+    </section>
+
+    <!-- DEDUCTION -->
+    <section id="screen-deduction" class="screen hidden">
+      <div class="ded-head">
+        <h2>The deduction board</h2>
+        <p id="ded-progress"></p>
+        <p class="ded-hint">Drag each clue onto the theory it supports — or tap a clue, then tap a theory. Some evidence fits nowhere: drop it and watch it bounce back.</p>
+      </div>
+      <div id="evidence-pool"></div>
+      <div id="theory-cards"></div>
+      <button class="btn primary" id="btn-close-case">Close the case</button>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="screen-results" class="screen hidden">
+      <div class="game-kicker">Case closed</div>
+      <div class="res-rank" id="res-rank"></div>
+      <div id="res-stars"></div>
+      <div><span id="res-badge" class="hidden"></span></div>
+      <p>Your deduction board, complete:</p>
+      <div class="res-box">
+        <h4>📜 Evidence matched on the board</h4>
+        <div id="res-board"></div>
+      </div>
+      <div class="res-box">
+        <h4>⭐ Score breakdown</h4>
+        <ul id="res-score"></ul>
+      </div>
+      <p class="real-note">The real Somerton Man case was never officially solved — he remains one of Australia’s most famous unidentified dead. Your deduction is your own.</p>
+      <div class="next-case">🔜 <b>Next case file:</b> <i>The Sodder Children</i> — five children vanish from a burning house on Christmas Eve, 1945. Coming soon.</div>
+      <button class="btn primary" id="btn-again">🔁 Play again</button>
+    </section>
+
+  </main>
+
+  <footer>Beast Kid: Case Files · free to play · a Beast Kid mystery</footer>
+</div>
+
+<!-- JOURNAL -->
+<aside id="journal" aria-label="Detective's journal">
+  <div class="journal-head">
+    <h3>📋 Detective’s journal</h3>
+    <button class="icon-btn" id="journal-close" aria-label="Close journal">✕</button>
+  </div>
+  <div id="journal-body"></div>
+</aside>
+
+<!-- PAUSE -->
+<div id="pause-menu">
+  <div class="pause-box">
+    <h3>⏸️ Paused</h3>
+    <button class="btn primary" id="btn-resume">Resume</button>
+    <button class="btn" id="btn-pause-how">How to play</button>
+    <button class="btn" id="btn-restart">Restart case</button>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script src="platform.js"></script>
+<script src="audio.js"></script>
+<script src="data.js"></script>
+<script>
+/* Portal-art manifest: illustrated noir art staged by the art stream at
+   . Any file that is missing falls back to the inline
+   SVG scene (scenes) or is simply omitted (title keyart, NPC portraits),
+   so the game never breaks on a missing asset. */
+window.BK_PORTAL_ART = {
+  scenes: {
+    beach:   "scene-beach.png",
+    station: "scene-police.png",
+    railway: "scene-railway.png",
+    car:     "scene-car.png"
+  },
+  npcs: {
+    walker: "npc-walker.png",
+    lawson: "npc-lawson.png",
+    porter: "npc-porter.png"
+  },
+  title: "title-keyart.png"
+};
+</script>
+<script src="game.js"></script>
+</body>
+</html>
